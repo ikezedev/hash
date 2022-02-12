@@ -4,7 +4,7 @@ use clap::{AppSettings, Parser, Subcommand};
 #[derive(Parser)]
 #[clap(name = "hasurautils")]
 #[clap(about = "A CLI for managing Hasura GraphQL Engine", long_about = None)]
-pub struct HasuraUtils {
+pub struct App {
     #[clap(subcommand)]
     pub command: Commands,
 }
