@@ -2,7 +2,8 @@ extern crate dotenv;
 use reqwest::{header, Client};
 
 use dotenv::dotenv;
-use std::env;
+use serde::{Deserialize, Serialize};
+use std::{env, str::FromStr};
 
 const SUPPORTED_DRIVERS: [&'static str; 1] = ["pg"];
 
@@ -13,6 +14,40 @@ pub struct EnvVars {
     pub query_url: String,
     pub admin_secret: String,
     pub healthz: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct RunSQL<'a> {
+    r#type: &'a str,
+    args: RunSQLArgs<'a>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct RunSQLArgs<'a> {
+    source: &'a str,
+    sql: &'a str,
+    cascade: bool,
+    read_only: bool,
+}
+
+impl<'a> Default for RunSQL<'a> {
+    fn default() -> Self {
+        Self {
+            r#type: "run_sql",
+            args: Default::default(),
+        }
+    }
+}
+
+impl<'a> Default for RunSQLArgs<'a> {
+    fn default() -> Self {
+        Self {
+            source: "default",
+            sql: Default::default(),
+            cascade: false,
+            read_only: true,
+        }
+    }
 }
 
 impl EnvVars {
@@ -53,5 +88,16 @@ impl EnvVars {
             .default_headers(headers)
             .build()
             .expect("unable to construct client");
+    }
+
+    pub fn getRunSQL<'a>(&'a self, sql: &'a str) -> RunSQL<'a> {
+        RunSQL {
+            args: RunSQLArgs {
+                source: &self.source,
+                sql: sql.into(),
+                ..Default::default()
+            },
+            ..Default::default()
+        }
     }
 }

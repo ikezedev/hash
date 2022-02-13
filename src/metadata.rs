@@ -1,9 +1,26 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug)]
 pub struct Metadata {
     version: u8,
     sources: Vec<MetadataSource>,
+}
+
+impl Metadata {
+    pub fn get_untracked_tables(&self, tables: Vec<QualifiedTable>) -> Vec<QualifiedTable> {
+        let mut result = vec![];
+        for table in tables {
+            if !self.is_table_tracked(&table) {
+                result.push(table)
+            }
+        }
+        result
+    }
+    pub fn is_table_tracked(&self, table: &QualifiedTable) -> bool {
+        self.sources
+            .iter()
+            .any(|ms| ms.tables.iter().any(|te| &te.table == table))
+    }
 }
 
 #[derive(Deserialize, Debug)]
@@ -21,8 +38,8 @@ struct TableEntry {
     array_relationships: Vec<ArrayRelationships>,
 }
 
-#[derive(Deserialize, Debug)]
-struct QualifiedTable {
+#[derive(Deserialize, Serialize, Debug, PartialEq, PartialOrd)]
+pub struct QualifiedTable {
     name: String,
     schema: String,
 }
