@@ -42,7 +42,7 @@ impl<'a> MetadataRequest for TrackTable<'a> {}
 #[derive(Debug, Serialize)]
 pub struct TrackTableArgs<'a> {
     pub(crate) source: &'a str,
-    pub(crate) table: QualifiedTable,
+    pub(crate) table: &'a QualifiedTable,
 }
 
 #[derive(Debug, Serialize)]

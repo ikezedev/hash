@@ -59,12 +59,12 @@ impl HasuraUtils {
         Ok(resp.into_inner())
     }
 
-    pub async fn trackAllTables(&self) -> Result<Response, Box<dyn std::error::Error>> {
+    pub async fn track_all_tables(&self) -> Result<Response, Box<dyn std::error::Error>> {
         let metadata = self.get_metadata().await?;
         let all_tables = self.get_all_tables().await?;
         let untracked_tables = metadata.get_untracked_tables(all_tables);
         let args: Vec<TrackTable> = untracked_tables
-            .into_iter()
+            .iter()
             .map(|table| TrackTableArgs {
                 table,
                 source: &self.env.source,
@@ -75,6 +75,28 @@ impl HasuraUtils {
             .client
             .post(&self.env.metadata_url)
             .json(&BulkRequest::new(args))
+            .send()
+            .await?
+            .error_for_status()?;
+        println!("{res:?}");
+        Ok(res)
+    }
+
+    pub async fn track_table(
+        &self,
+        table: QualifiedTable,
+    ) -> Result<Response, Box<dyn std::error::Error>> {
+        let metadata = self.get_metadata().await?;
+        let untracked_tables = metadata.get_untracked_tables(vec![table]);
+        let args = TrackTableArgs {
+            table: untracked_tables.first().expect("table is already tracked!"),
+            source: &self.env.source,
+        };
+        let body = TrackTable::new(args);
+        let res = self
+            .client
+            .post(&self.env.metadata_url)
+            .json(&body)
             .send()
             .await?
             .error_for_status()?;
