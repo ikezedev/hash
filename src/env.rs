@@ -3,7 +3,7 @@ use reqwest::{header, Client};
 
 use dotenv::dotenv;
 use serde::{Deserialize, Serialize};
-use std::{env, str::FromStr};
+use std::env;
 
 const SUPPORTED_DRIVERS: [&'static str; 1] = ["pg"];
 
@@ -73,28 +73,23 @@ impl EnvVars {
         }
     }
 
-    pub fn makeClient(&self) -> Client {
+    pub fn make_client(&self) -> Client {
         let mut headers = header::HeaderMap::new();
         headers.insert(
             "X-HASURA-ADMIN-SECRET",
             header::HeaderValue::from_str(&self.admin_secret).unwrap(),
         );
-        let h = &self.healthz;
-        println!("{h}");
-        let a = &self.admin_secret;
-        println!("{a}");
-
         return Client::builder()
             .default_headers(headers)
             .build()
             .expect("unable to construct client");
     }
 
-    pub fn getRunSQL<'a>(&'a self, sql: &'a str) -> RunSQL<'a> {
+    pub fn get_run_sql<'a>(&'a self, sql: &'a str) -> RunSQL<'a> {
         RunSQL {
             args: RunSQLArgs {
                 source: &self.source,
-                sql: sql.into(),
+                sql,
                 ..Default::default()
             },
             ..Default::default()

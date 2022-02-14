@@ -1,5 +1,6 @@
 mod cli;
 mod env;
+mod error;
 mod metadata;
 mod sql;
 mod types;
@@ -10,31 +11,44 @@ use cli::{App, Commands};
 use env::EnvVars;
 use util::HasuraUtils;
 
-use crate::{metadata::QualifiedTable, types::RunSQLReponse};
+use crate::metadata::QualifiedTable;
 
 #[tokio::main]
 async fn main() {
     let cli = App::parse();
     let env = EnvVars::init();
-    let client = env.makeClient();
+    let client = env.make_client();
     let app = HasuraUtils { client, env };
-    let strr = r#"[{"name": "users", "schema": "public"}, {"name": "authors", "schema": "authors_schema"}]"#;
-
-    let str_ex = format!("{{\"result_type\": \"TuplesOk\", \"result\": [[\"tables\"], [{strr}]]}}");
 
     match &cli.command {
         Commands::TrackTable { name, schema, all } => {
-            println!("name: {name:?}, schema: {schema:?}, all: {all}");
-            let state: RunSQLReponse<Vec<QualifiedTable>> =
-                serde_json::from_str(&str_ex).expect("error parsing");
-            let next = state.into_inner();
-            println!("{next:?}");
+            if *all {
+                let res = app.track_all_tables().await;
+                println!("{res:?}");
+            } else {
+                let res = app
+                    .track_table(QualifiedTable {
+                        name: name.as_ref().unwrap().to_string(),
+                        schema: schema.as_ref().unwrap().to_string(),
+                    })
+                    .await;
+                println!("{res:?}");
+            }
         }
-        Commands::TrackRel { name, schema, all } => {
-            println!("name: {name:?}, schema: {schema:?}, all: {all}")
+        Commands::TrackRel {
+            name: _,
+            schema: _,
+            all,
+        } => {
+            if *all {
+                let res = app.track_all_relationships().await;
+                println!("{res:?}");
+            } else {
+                println!("Not implemented yet!");
+            }
         }
         _ => {
-            eprintln!("Sorry this functionality is not supported yet!")
+            println!("Sorry this functionality is not supported yet!")
         }
     }
 }

@@ -56,4 +56,7 @@ pub enum Commands {
         #[clap(short, long, group = "function")]
         all: bool,
     },
+    /// Check health of the Hasura instance
+    #[clap(setting(AppSettings::ArgRequiredElseHelp))]
+    Doctor,
 }
