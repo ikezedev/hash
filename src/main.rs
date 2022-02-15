@@ -42,7 +42,7 @@ async fn main() {
         } => {
             if *all {
                 let res = app.track_all_relationships().await;
-                println!("{res:?}");
+                println!("\n{res:?}");
             } else {
                 println!("Not implemented yet!");
             }

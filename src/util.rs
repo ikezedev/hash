@@ -3,7 +3,7 @@ use reqwest::{Client, Response};
 use crate::error::{HasuraUtilsError, OtherError};
 use crate::metadata::QualifiedTable;
 use crate::sql;
-use crate::types::{BulkRequest, RunSQLReponse, SQLFKRelationships, TrackTable, TrackTableArgs};
+use crate::types::{BulkRequest, RunSQLReponse, SQLFKRelationship, TrackTable, TrackTableArgs};
 use crate::{env::EnvVars, metadata::Metadata};
 
 pub struct HasuraUtils {
@@ -108,7 +108,7 @@ impl HasuraUtils {
 
     pub async fn get_all_fk_relationships(
         &self,
-    ) -> Result<Vec<SQLFKRelationships>, HasuraUtilsError> {
+    ) -> Result<Vec<SQLFKRelationship>, HasuraUtilsError> {
         let body = &self.env.get_run_sql(sql::get_all_fk_relationships());
         let resp = self
             .client
@@ -119,7 +119,7 @@ impl HasuraUtils {
             .error_for_status()?
             .json::<RunSQLReponse>()
             .await?
-            .into_inner::<Vec<SQLFKRelationships>>()?;
+            .into_inner::<Vec<SQLFKRelationship>>()?;
         Ok(resp)
     }
 
@@ -138,7 +138,6 @@ impl HasuraUtils {
             .send()
             .await?
             .error_for_status()?;
-        println!("{res:?}");
         Ok(res)
     }
 }

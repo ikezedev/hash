@@ -113,7 +113,9 @@ dependencies = [
  "encode_unicode",
  "libc",
  "once_cell",
+ "regex",
  "terminal_size",
+ "unicode-width",
  "winapi",
 ]
 
@@ -264,6 +266,7 @@ version = "0.1.0"
 dependencies = [
  "Inflector",
  "clap",
+ "console",
  "dotenv",
  "indicatif",
  "reqwest",
@@ -1034,6 +1037,12 @@ checksum = "d54590932941a9e9266f0832deed84ebe1bf2e4c9e4a3554d393d18f5e854bf9"
 dependencies = [
  "tinyvec",
 ]
+
+[[package]]
+name = "unicode-width"
+version = "0.1.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3ed742d4ea2bd1176e236172c8429aaf54486e7ac098db29ffe6529e0ce50973"
 
 [[package]]
 name = "unicode-xid"

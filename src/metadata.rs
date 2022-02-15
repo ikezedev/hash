@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::types::{
     CreateArrayRelationship, CreateObjectRelationship, CreateRelationship, RelType,
-    SQLFKRelationships,
+    SQLFKRelationship,
 };
 
 #[derive(Deserialize, Debug)]
@@ -21,9 +21,10 @@ impl Metadata {
         }
         result
     }
+
     pub fn get_untracked_relationships<'a>(
         &'a self,
-        relationships: &'a Vec<SQLFKRelationships>,
+        relationships: &'a Vec<SQLFKRelationship>,
         source: &'a str,
     ) -> Vec<CreateRelationship> {
         let mut array_rels: Vec<CreateArrayRelationship> = vec![];
@@ -48,14 +49,16 @@ impl Metadata {
             )
             .collect()
     }
+
     pub fn is_table_tracked(&self, table: &QualifiedTable) -> bool {
         self.sources
             .iter()
             .any(|ms| ms.tables.iter().any(|te| &te.table == table))
     }
+
     pub fn is_relationship_tracked(
         &self,
-        relationship: &SQLFKRelationships,
+        relationship: &SQLFKRelationship,
         rel_type: RelType,
         source: &str,
     ) -> bool {
@@ -101,13 +104,16 @@ struct MetadataSource {
     name: String,
     kind: Option<String>,
     tables: Vec<TableEntry>,
-    functions: Option<Vec<FunctionEntry>>,
+    #[serde(default)]
+    functions: Vec<FunctionEntry>,
 }
 
 #[derive(Deserialize, Debug)]
 struct TableEntry {
     table: QualifiedTable,
+    #[serde(default)]
     object_relationships: Vec<ObjectRelationships>,
+    #[serde(default)]
     array_relationships: Vec<ArrayRelationships>,
 }
 

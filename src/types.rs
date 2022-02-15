@@ -1,5 +1,6 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Display};
 
+use console::style;
 use inflector::Inflector;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
@@ -87,7 +88,7 @@ pub struct CreateObjectRelationshipArgs<'a> {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct SQLFKRelationships {
+pub struct SQLFKRelationship {
     pub table_name: String,
     pub table_schema: String,
     pub constraint_name: String,
@@ -96,7 +97,37 @@ pub struct SQLFKRelationships {
     pub column_mapping: HashMap<String, String>,
 }
 
-impl SQLFKRelationships {
+impl Display for SQLFKRelationship {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let key = self.column_mapping.keys().nth(0).unwrap();
+        let value = self.column_mapping.get(key).unwrap();
+        let obj = format!(
+            "{} {} {}  -  {}.{} --> {}.{}",
+            style(&self.table_name).bold(),
+            style("-->").bold(),
+            style(&self.ref_table_name).bold(),
+            self.table_name,
+            style(key).magenta(),
+            self.ref_table_name,
+            style(value).magenta()
+        );
+        let arr = format!(
+            "{} {} {} {} {}  -  {}.{} --> {}.{}",
+            style(&self.ref_table_name).bold(),
+            style("-->").bold(),
+            style("[").bold(),
+            style(&self.table_name).bold(),
+            style("]").bold(),
+            self.table_name,
+            style(key).magenta(),
+            self.ref_table_name,
+            style(value).magenta(),
+        );
+        write!(f, "{}\n\n{}", &obj, &arr)
+    }
+}
+
+impl SQLFKRelationship {
     pub fn get_relationships<'a>(
         &'a self,
         source: &'a str,
@@ -164,18 +195,6 @@ impl<'a> From<CreateObjectRelationship<'a>> for CreateRelationship<'a> {
     }
 }
 
-// impl<'a> From<&'a CreateObjectRelationship<'a>> for &'a CreateRelationship<'a> {
-//     fn from(rel: &'a CreateObjectRelationship<'a>) -> &'a CreateRelationship<'a> {
-//         &CreateRelationship::Object(rel)
-//     }
-// }
-
-// impl<'a> From<&'a CreateArrayRelationship<'a>> for &'a CreateRelationship<'a> {
-//     fn from(rel: &'a CreateArrayRelationship<'a>) -> &'a CreateRelationship<'a> {
-//         &CreateRelationship::Array(rel)
-//     }
-// }
-
 impl<'a> From<CreateArrayRelationship<'a>> for CreateRelationship<'a> {
     fn from(rel: CreateArrayRelationship<'a>) -> Self {
         CreateRelationship::Array(rel)
@@ -191,12 +210,12 @@ pub struct TrackTableArgs<'a> {
 }
 
 #[derive(Debug, Serialize)]
-pub struct BulkRequest<'a, T: MetadataRequest> {
-    r#type: &'a str,
+pub struct BulkRequest<T: MetadataRequest> {
+    r#type: &'static str,
     args: Vec<T>,
 }
 
-impl<'a, T: MetadataRequest> BulkRequest<'a, T> {
+impl<T: MetadataRequest> BulkRequest<T> {
     pub fn new(args: Vec<T>) -> Self {
         BulkRequest {
             r#type: "bulk",
