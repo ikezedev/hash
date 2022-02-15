@@ -21,9 +21,14 @@ async fn main() {
     let app = HasuraUtils { client, env };
 
     match &cli.command {
-        Commands::TrackTable { name, schema, all } => {
+        Commands::TrackTable {
+            name,
+            schema,
+            all,
+            ignore,
+        } => {
             if *all {
-                let res = app.track_all_tables().await;
+                let res = app.track_all_tables(ignore).await;
                 println!("{res:?}");
             } else {
                 let res = app

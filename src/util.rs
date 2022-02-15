@@ -62,14 +62,26 @@ impl HasuraUtils {
         Ok(resp)
     }
 
-    pub async fn track_all_tables(&self) -> Result<(), HasuraUtilsError> {
+    pub async fn track_all_tables(
+        &self,
+        exclude: &Option<Vec<String>>,
+    ) -> Result<(), HasuraUtilsError> {
         let metadata = self.get_metadata().await?;
         let all_tables = self.get_all_tables().await?;
         let untracked_tables = metadata.get_untracked_tables(all_tables);
-        if untracked_tables.len() == 0 {
+        let filtered_tables = untracked_tables
+            .into_iter()
+            .filter(|t| {
+                exclude
+                    .as_ref()
+                    .map(|ex| !ex.contains(&t.name))
+                    .unwrap_or(true)
+            })
+            .collect::<Vec<_>>();
+        if filtered_tables.len() == 0 {
             return Err(OtherError("Database has no untracked tables").into());
         }
-        let args: Vec<TrackTable> = untracked_tables
+        let args: Vec<TrackTable> = filtered_tables
             .iter()
             .map(|table| TrackTableArgs {
                 table,
@@ -84,7 +96,6 @@ impl HasuraUtils {
             .send()
             .await?
             .error_for_status()?;
-        println!("{res:?}");
         Ok(())
     }
 
@@ -124,6 +135,24 @@ impl HasuraUtils {
     }
 
     pub async fn track_all_relationships(&self) -> Result<Response, HasuraUtilsError> {
+        let metadata = self.get_metadata().await?;
+        let relationships = self.get_all_fk_relationships().await?;
+        let untracked_relationships =
+            metadata.get_untracked_relationships(&relationships, &self.env.source);
+        if untracked_relationships.len() == 0 {
+            return Err(OtherError("Database has no untracked relationships").into());
+        }
+        let res = self
+            .client
+            .post(&self.env.metadata_url)
+            .json(&BulkRequest::new(untracked_relationships))
+            .send()
+            .await?
+            .error_for_status()?;
+        Ok(res)
+    }
+
+    pub async fn track_relationships(&self) -> Result<Response, HasuraUtilsError> {
         let metadata = self.get_metadata().await?;
         let relationships = self.get_all_fk_relationships().await?;
         let untracked_relationships =
