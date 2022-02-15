@@ -75,7 +75,7 @@ impl HasuraUtils {
                 exclude
                     .as_ref()
                     .map(|ex| !ex.contains(&t.name))
-                    .unwrap_or(true)
+                    .unwrap_or(false)
             })
             .collect::<Vec<_>>();
         if filtered_tables.len() == 0 {
@@ -95,7 +95,8 @@ impl HasuraUtils {
             .json(&BulkRequest::new(args))
             .send()
             .await?
-            .error_for_status()?;
+            .error_for_status();
+        println!("{res:?}");
         Ok(())
     }
 

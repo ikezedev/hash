@@ -29,6 +29,10 @@ pub enum Commands {
         /// names of tables to ignore
         #[clap(short, long, requires = "all")]
         ignore: Option<Vec<String>>,
+
+        /// list untracked tables
+        #[clap(short, long, group = "table")]
+        list: bool,
     },
     /// Track relationships(s)
     #[clap(setting(AppSettings::ArgRequiredElseHelp))]

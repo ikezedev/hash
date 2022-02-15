@@ -26,9 +26,13 @@ async fn main() {
             schema,
             all,
             ignore,
+            list,
         } => {
             if *all {
                 let res = app.track_all_tables(ignore).await;
+                println!("{res:?}");
+            } else if *list {
+                let res = app.get_all_tables().await;
                 println!("{res:?}");
             } else {
                 let res = app
